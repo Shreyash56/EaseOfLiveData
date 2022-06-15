@@ -1,0 +1,396 @@
+If your are using Two-way Data binding you have to required the POJO class. Creating instance of this pojo class in ViewModel Class you are able to access
+userinput.
+
+Here I Show you simple POJO class for our Login API and LoginViewModel Class.
+
+public class LoginModel {
+
+    String username;
+    String password;
+
+    // Cunstructor for LoginModel Class
+    public LoginModel(String username, String password) {
+        this.username = username;
+        this.password = password;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+}
+
+
+Now it's time to create ViewModel Class for Login. Create class with naming LoginViewModel.
+
+
+public class LoginViewModel extends BaseObservable {
+
+    LoginModel loginModel;
+    
+    public String userInvalid = "Enter valid username...";
+    public String passwordInvalid = "Enter valid password...";
+    public String successMsg = "Logged In Successfully...";
+    
+    MutableLiveData<LoginResponse> loginData = new MutableLiveData<>();
+    
+    public ObservableBoolean loading = new ObservableBoolean(  );
+    public ObservableBoolean isEnabled = new ObservableBoolean( true ); // default value is false
+    // using observable you can change button title or any of the textfield data
+    public ObservableField<String> btnText = new ObservableField <>( App.getInstance().getResources().getString( R.string.login ) );
+    
+    // Custructor for LoginViewMoel Class
+    public LoginViewModel(){
+        loginModel = new LoginModel("","");
+    }
+    
+     public void setUsername(String username){
+        loginModel.setUsername(username);
+        notifyPropertyChanged(BR.username);
+    }
+
+    @Bindable
+    public String getUsername(){
+        return loginModel.getUsername(); 
+        // return "USER NAME";
+        if you are in developing mode you are able to pass static user name overhere like above commenting line. 
+        By removing it you are able to pass dynamic user input and its handle by Two-way Data binding.
+    }
+
+    public void setPassword(String password){
+        loginModel.setPassword(password);
+        notifyPropertyChanged(BR.password);
+    }
+
+    @Bindable
+    public String getPassword(){
+        return loginModel.getPassword(); 
+    }
+    
+    // set the error message using binding Adapter
+     @Bindable
+    public String errorMessage = null;
+
+    public String getErrorMessage() {
+        return errorMessage;
+    }
+
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
+        loading.set( false );
+        notifyPropertyChanged( BR.errorMessage);
+    }
+    
+    
+    // Function call on Button Click
+    
+    public void onLoginClicked(View view){
+        loading.set( false );
+        if (checkPermission()) {
+                if (!isUserValid())
+                    setErrorMessage(userInvalid);
+                else if (!isPasswordValid())
+                    setErrorMessage(passwordInvalid);
+                else{
+                    isEnabled.set( false );
+                    btnText.set( "" );
+                    userLogin(view.getContext());
+                }
+
+        }else {
+            requestPermission( context );
+            setErrorMessage(errorMessage);
+        }
+    }
+    
+    
+    // this below function is call as per your logic here i called it on button click in above method.
+    
+    
+    public MutableLiveData<LoginResponse> userLogin(Context context){
+
+        ApiClient.getService().loginUser(getUsername(), getPassword())
+                .subscribeOn( Schedulers.io())
+                .observeOn( AndroidSchedulers.mainThread())
+                .unsubscribeOn(Schedulers.io())
+                .subscribe(new DisposableObserver<LoginResponse>() {
+                    @Override
+                    public void onNext(LoginResponse loginResponse) {
+                        isEnabled.set( true );
+                        btnText.set( context.getResources().getString( R.string.login ) );
+                        if (loginResponse != null){
+                            loading.set( false );
+                            if (loginResponse.getStatus() == 1 ) {
+                                setErrorMessage( successMsg );
+                                access your data and manage it
+                                
+                                move on next widgets 
+                                ViewTransition.moveInStackNull( context, YourNextActivity.class );
+
+                            }else {
+                                setErrorMessage( loginResponse.getMessage() );
+                            }
+                        }else {
+                            loading.set( false );
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        isEnabled.set( true );
+                        loading.set( false );
+                        btnText.set( context.getResources().getString( R.string.login ) );
+                        setErrorMessage( "Error Message" );
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+
+
+        return loginData;
+    }
+    
+---------------------------------------------------------------------------------------------------------------    
+You can also see the layout of Login File Here.
+
+<layout xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <data>
+
+        <import type="android.view.View" />
+
+        <import type="android.text.TextUtils"/>
+
+        <variable
+            name="loginModel"
+            type="com.android.app.viewmodels.LoginViewModel" />
+       
+       // if you are using fragment
+       <variable
+            name="manager"
+            type="androidx.fragment.app.FragmentManager"/>
+
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout 
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".view.signin.SignInActivity"
+        android:background="@color/log_background">
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guide1"
+            style="@style/GuidLineHorizontal"
+            app:layout_constraintGuide_percent=".12"/>
+
+        <ImageView
+            android:id="@+id/iv_Logo"
+            android:layout_width="@dimen/_150sdp"
+            android:layout_height="@dimen/_150sdp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/guide1"
+            android:src="@drawable/ic_login_user"/>
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guide2"
+            style="@style/GuidLineHorizontal"
+            app:layout_constraintGuide_percent=".45"/>
+
+        <LinearLayout
+            android:id="@+id/ll_Credentials"
+            android:layout_width="@dimen/_0sdp"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/guide2"
+            android:orientation="vertical">
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="@dimen/_4sdp"
+                android:layout_marginLeft="@dimen/_12sdp"
+                android:layout_marginRight="@dimen/_12sdp"
+                app:cardBackgroundColor="@color/white">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <EditText
+                        android:id="@+id/et_UserName"
+                        style="@style/LogEditText"
+                        android:layout_width="match_parent"
+                        android:hint="@string/username"
+                        android:enabled="@{ loginModel.isEnabled }"
+                        android:inputType="textCapCharacters"
+                        android:text="@={ loginModel.username }"/>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/_1sdp"
+                        android:background="@color/gray_e3"/>
+
+                    <Edittext
+                        android:id="@+id/et_Password"
+                        style="@style/LogEditText"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/et_UserName"
+                        android:hint="@string/password"
+                        android:enabled="@{ loginModel.isEnabled }"
+                        android:inputType="textPassword"
+                        android:imeOptions="actionDone"
+                        android:text="@={ loginModel.password }"/>
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/_20sdp">
+
+                <MaterialButton
+                    android:id="@+id/btn_Login"
+                    style="@style/LogButton"
+                    android:layout_width="match_parent"
+                    android:text="@{ loginModel.btnText }"
+                    android:enabled="@{ loginModel.isEnabled }"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    bind:errorMessage="@{loginModel.errorMessage}"
+                    android:onClick="@{(v) -> loginModel.onLoginClicked(v)}"/>
+
+                <ProgressBar
+                    android:layout_width="@dimen/_18sdp"
+                    android:layout_height="@dimen/_18sdp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    android:indeterminate="true"
+                    android:layout_gravity="center_vertical|center"
+                    android:indeterminateTint="@color/colorPrimary"
+                    android:visibility="@{ loginModel.isEnabled ? View.GONE : View.VISIBLE }"/>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </LinearLayout>
+            
+            <ImageView
+                    android:layout_width="@dimen/_15sdp"
+                    android:layout_height="@dimen/_15sdp"
+                    android:layout_marginRight="@dimen/_8sdp"
+                    android:layout_marginLeft="@dimen/_8sdp"
+                    android:visibility="@{itemModel.readVisible ? View.VISIBLE : View.GONE}"
+                    bind:srcDrawable="@{itemModel.readEntry ? @string/ic_send_double_check : @string/ic_sent_check }"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+    
+</layout>
+
+
+// Here are Binders we have defines you can see them we have used it in Matrial button layout for showing error message 
+
+/*
+     *
+     * bind:toastMessage=@{viewModel.toastMessage}
+     *
+     *
+     * */
+    @BindingAdapter({"toastMessage"})
+    public static void showMessage(View view, String message) {
+        if (message != null)
+            Snackbar.make( view, message, Snackbar.LENGTH_SHORT ).show();
+    }
+
+    @BindingAdapter({"errorMessage"})
+    public static void showLoginMessage(View view, String message){
+        if (message != null){
+            Snackbar snackbar = Snackbar.make(view, message, Snackbar.LENGTH_LONG);
+            snackbar.setBackgroundTint( ContextCompat.getColor(view.getContext(), android.R.color.holo_red_light) );
+            snackbar.show();
+        }
+    }
+    
+    @BindingAdapter({"srcDrawable"})
+    public static void loadDrawable(ImageView view, String imageName) {
+        Glide.with(view.getContext())
+                .load(getImage(view.getContext(), imageName))
+                .into(view);
+    }
+
+    /*@BindingAdapter("android:visibility")
+    public static void setVisibility(View view, Boolean value) {
+        view.setVisibility(value ? View.VISIBLE : View.GONE);
+    }*/
+
+    @BindingAdapter("app:cardBackground")
+    public static void setLabelCardBackground(MaterialCardView view, String color){
+        if (!TextUtils.isEmpty(color)){
+            view.setCardBackgroundColor(Color.parseColor(color));
+        }
+    }
+    
+    
+ /* SOME IMPORTANT THINGS HAVE TO KEEP NOTICE */ 
+ - if you want to use bind some adapter then and need to bind using two-way data binding you have to create 
+ MutableLiveData List as below, here Resp is base class and Data is sub class, You get your data in Data class 
+ now you are able to access data from Data class in two-way binding. 
+ 
+ Here below is an Example.
+ 
+ public MutableLiveData<List<Resp.Data>> wholeList = new MutableLiveData<>();
+ 
+ now pass whole list data to this wholeList variable from API parsing like
+ 
+ wholeList.setValue(allList);
+ 
+ 
+this wholelist is Observable so can call it in your Activity class like
+viewModel.wholeList.observe( this, new Observer <List <Resp.Data>>() {
+            @Override
+            public void onChanged(List <Resp.Data> data) {
+            
+             //  if the list in fragment then 
+                fragment.update( data );
+            }
+        } );
+
+or else
+viewModel.wholeList.observe(this, data -> {
+            adapter = new Adapter();
+            adapter.setHasStableIds(true);
+            binding.recyclerData.setAdapter(adapter);
+            binding.recyclerData.setHasFixedSize(true);
+            adapter.updateData(data);
+        });
+
+// this function is declare inside adapter class for notified list
+public void updateData(List<Resp.Data> data){
+        mList = data;
+        notifyDataSetChanged();
+    }
+        
