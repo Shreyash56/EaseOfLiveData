@@ -1,0 +1,133 @@
+// Using two-way databinding and LiveData concept its easy to bind list and also make some operation on its view without using of interface class
+
+for this do not add below line
+public MutableLiveData<List<Resp.Data>> reportsData = new MutableLiveData<>();
+
+public class DataAdapter extends RecyclerView.Adapter {
+
+    public List<Resp.Data> mList = new ArrayList <>(  );
+
+    @NonNull
+    @Override
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        return new ViewHolder( LayoutInflater.from( parent.getContext() ).inflate( R.layout.layout_item, parent, false ) );
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+        if (holder instanceof ViewHolder){
+            ViewHolder viewHolder = (ViewHolder) holder;
+            viewHolder.setItem( position );
+        }
+    }
+
+    @Override
+    public int getItemCount() {
+        return mList.size();
+    }
+
+    public class ViewHolder extends RecyclerView.ViewHolder{
+
+        LayoutReportItemBinding binding;
+
+        public ViewHolder(@NonNull View itemView) {
+            super( itemView );
+            binding = DataBindingUtil.bind( itemView );
+            if (binding != null){
+                binding.executePendingBindings();
+            }
+        }
+
+        public void setItem(int pos){
+            /* setItemModel is method name of varible which set in layout_label */
+            binding.setItemViewModel(mList.get(pos));
+        }
+
+    }
+
+    public void updateData(List<Resp.Data> data){
+        mList = data;
+//        mList.add(null);
+        notifyDataSetChanged();
+    }
+
+    public void loadMore(List<Resp.Data> data) {
+        mList.addAll(data);
+//        mList.add(null);
+        notifyDataSetChanged();
+
+    }
+}
+
+
+// here are the view file for above adpter class
+
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:bind="http://schemas.android.com/apk/res-auto">
+
+    <data>
+        <variable
+            name="itemViewModel"
+            type="com.android.app.data.retromodel.Resp.Data"/>
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@drawable/background_report_item">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@{itemViewModel.item4}"
+                android:textColor="@color/black_transparent"
+                android:gravity="center_vertical"
+                android:textSize="@dimen/_10sdp"
+                android:lineSpacingExtra="@dimen/_2sdp"
+                android:paddingLeft="@dimen/_5sdp"
+                android:paddingBottom="@dimen/_3sdp"
+                android:background="@drawable/background_bottom_line"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@{itemViewModel.item3}"
+                android:textColor="@color/black"
+                android:gravity="center_vertical"
+                android:textSize="@dimen/_10sdp"
+                android:paddingLeft="@dimen/_5sdp"
+                android:paddingBottom="@dimen/_3sdp"/>
+
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            bind:creditdebit="@{itemViewModel.item}"
+            android:layout_weight="1"
+            android:textColor="@color/black_transparent"
+            android:textSize="@dimen/_10sdp"
+            android:gravity="end|center_vertical"
+            android:paddingRight="@dimen/_5sdp"
+            android:background="@drawable/background_vertical_line"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            bind:creditdebit="@{itemViewModel.item1}"
+            android:layout_weight="1"
+            android:textColor="@color/black_transparent"
+            android:textSize="@dimen/_10sdp"
+            android:paddingRight="@dimen/_5sdp"
+            android:gravity="end|center_vertical"/>
+
+    </LinearLayout>
+
+</layout>
