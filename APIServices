@@ -1,0 +1,53 @@
+Now Create one Interface for API Request.
+Here are the example of POST and GET Method
+
+I hope that you are aware with Retrofit Data parsing.
+
+* first one is Post method that you have to pass data and through which you are getting the responce.
+
+    @FormUrlEncoded
+    @POST(APIConst.url of service)
+    Observable<LoginResponse> loginUser(@Field( APIConst.UNAME )String uname,
+                                        @Field( APIConst.PASS )String pass);
+
+
+* this second is Get method here you not need to pass any parameter, call checkDate() function and you will get result for the given api service. Make sure that
+you are not using here  @FormUrlEncoded in Get Method otherwise you getting error.
+
+    @GET(APIConst.url of Service)
+    Observable<DateResponse> checkDate();
+    
+    
+    
+Befor passing LoginResponse to the Services you have to create that class. This class is used for Retrofit Data parsing.
+
+like
+public class LoginResponse {
+
+    @SerializedName("status")
+    @Expose
+    int status;
+
+    @SerializedName("message")
+    @Expose
+    String message;
+    
+}
+
+public int getStatus() {
+        return status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+    
+Same things you have to create for DateResponse class or whatever data you have to pass.
