@@ -1,7 +1,18 @@
 // Using two-way databinding and LiveData concept its easy to bind list and also make some operation on its view without using of interface class
 
-for this do not add below line
-public MutableLiveData<List<Resp.Data>> reportsData = new MutableLiveData<>();
+ <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rv_reportData"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                    tools:listitem="@layout/layout_item"/>
+
+like this also bind adapter from xml it self 
+<!--                android:adapter="@{ viewModel.adapter }"-->
+
+for adapter binding dont forgot to add this MutableLiveData for List and its access in layout file you can call this Observer in you activity class here
+its in LoginModel class line no 383.
+public MutableLiveData<List<Resp.Data>> wholeList = new MutableLiveData<>();
 
 public class DataAdapter extends RecyclerView.Adapter {
 
