@@ -138,7 +138,31 @@ public class DataAdapter extends RecyclerView.Adapter {
             android:textSize="@dimen/_10sdp"
             android:paddingRight="@dimen/_5sdp"
             android:gravity="end|center_vertical"/>
+            
+            // click action
+            <Button
+                    android:layout_width="@dimen/_70sdp"
+                    android:layout_height="@dimen/_22sdp"
+                    style="@style/LogButton"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                    android:insetTop="@dimen/_0sdp"
+                    android:insetBottom="@dimen/_0sdp"
+                    android:textColor="@color/white"
+                    android:text="@string/details"
+                    android:onClick="@{ (v) -> itemModel.seenDetails(v, itemModel.id) }"
+                    android:textAllCaps="false"
+                    android:layout_marginLeft="@dimen/_0sdp"
+                    android:layout_marginRight="@dimen/_0sdp"
+                    android:layout_marginTop="@dimen/_3sdp"/>
 
     </LinearLayout>
 
 </layout>
+
+// this method are in Retro Model as Retromodel is accessbile from Variable part and seeDetails are in ViewModel Calls so using of ViewModel class instance 
+that is getViewModel call seeDetails function.
+public void seenDetails(View view, String id){
+            viewModel.getviewModel().seeDetails( view, id );
+        }
+        
+        
